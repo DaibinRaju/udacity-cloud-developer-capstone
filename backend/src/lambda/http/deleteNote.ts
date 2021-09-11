@@ -1,32 +1,35 @@
-import "source-map-support/register";
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import * as middy from "middy";
 import { cors, httpErrorHandler } from "middy/middlewares";
-import { getAllTodosForUser } from "../../businessLogic/todo";
+import { deleteNote } from "../../businessLogic/note";
+import { createLogger } from "../../utils/logger";
 import { decodeJWTFromAPIGatewayEvent } from "../../auth/utils";
 import { parseUserId } from "../../auth/utils";
+
+const logger = createLogger("note");
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     console.log("Processing event: ", event);
-    // TODO: Get all TODO items for a current user
+    const noteId = event.pathParameters.noteId;
+
     const jwtToken = decodeJWTFromAPIGatewayEvent(event);
+
     const userId = parseUserId(jwtToken);
 
-    const result = await getAllTodosForUser(userId);
+    // TODO: Remove a TODO item by id
+    await deleteNote(noteId, userId);
 
-    if (result.count !== 0)
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ items: result.Items }),
-      };
+    logger.info("note DELETED", {
+      // Additional information stored with a log statement
+      key: noteId,
+      userId: userId,
+      date: new Date().toISOString,
+    });
 
     return {
-      statusCode: 404,
-      body: JSON.stringify({
-        error: "Item not found",
-      }),
+      statusCode: 200,
+      body: JSON.stringify(true),
     };
   }
 );

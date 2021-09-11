@@ -1,6 +1,6 @@
 /*
 
-    -todoId (string) - a unique id for an item
+    -noteId (string) - a unique id for an item
     - userId(string) - represents the user
     -createdAt (string) - date and time when an item was created
     -name (string) - name of a TODO item (e.g. "Change a light bulb")
@@ -10,8 +10,8 @@
 
 */
 
-export interface Todo {
-  todoId: string;
+export interface Note {
+  noteId: string;
   userId: string;
   createdAt: string;
   name: string;

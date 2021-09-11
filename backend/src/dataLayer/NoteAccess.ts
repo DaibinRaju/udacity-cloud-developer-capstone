@@ -1,16 +1,16 @@
 import * as AWS from "aws-sdk";
 import * as AWSXRay from "aws-xray-sdk";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { Todo } from "../models/Todo";
-import { UpdateTodoRequest } from "../requests/UpdateTodoRequest";
+import { Note } from "../models/Note";
+import { UpdateNoteRequest } from "../requests/UpdateNoteRequest";
 
 const XAWS = AWSXRay.captureAWS(AWS);
 
-export class TodoAccess {
+export class NoteAccess {
   constructor(
     private readonly docClient: DocumentClient = createDynamoDBClient(),
-    private readonly todoTable = process.env.TODOS_TABLE,
-    private readonly todoIndex = process.env.TODO_USER_INDEX,
+    private readonly noteTable = process.env.NOTES_TABLE,
+    private readonly noteIndex = process.env.NOTE_USER_INDEX,
     private readonly bucketName = process.env.IMAGES_S3_BUCKET,
     private readonly urlExpiration = process.env.S3_URL_EXPIRATION,
     private readonly s3 = new XAWS.S3({
@@ -18,11 +18,11 @@ export class TodoAccess {
     })
   ) {}
 
-  async getAllTodosForUser(userId: String): Promise<any> {
+  async getAllNotesForUser(userId: String): Promise<any> {
     const result = this.docClient
       .query({
-        TableName: this.todoTable,
-        IndexName: this.todoIndex,
+        TableName: this.noteTable,
+        IndexName: this.noteIndex,
         KeyConditionExpression: "userId = :userId",
         ExpressionAttributeValues: {
           ":userId": userId,
@@ -33,36 +33,36 @@ export class TodoAccess {
     return result;
   }
 
-  async createTodo(todo: Todo): Promise<Todo> {
+  async createNote(note: Note): Promise<Note> {
     this.docClient
       .put({
-        TableName: this.todoTable,
-        Item: todo,
+        TableName: this.noteTable,
+        Item: note,
       })
       .promise();
 
-    return todo;
+    return note;
   }
 
-  async updateTodo(
-    todoId: String,
-    updatedTodo: UpdateTodoRequest,
+  async updateNote(
+    noteId: String,
+    updatedNote: UpdateNoteRequest,
     userId: String
   ): Promise<void> {
-    console.log("Updating todoId: ", todoId, " userId: ", userId);
+    console.log("Updating noteId: ", noteId, " userId: ", userId);
 
     this.docClient.update(
       {
-        TableName: this.todoTable,
+        TableName: this.noteTable,
         Key: {
-          todoId,
+          noteId,
           userId,
         },
         UpdateExpression: "set #name = :n, #dueDate = :due, #done = :d",
         ExpressionAttributeValues: {
-          ":n": updatedTodo.name,
-          ":due": updatedTodo.dueDate,
-          ":d": updatedTodo.done,
+          ":n": updatedNote.name,
+          ":due": updatedNote.dueDate,
+          ":d": updatedNote.done,
         },
         ExpressionAttributeNames: {
           "#name": "name",
@@ -81,12 +81,12 @@ export class TodoAccess {
     );
   }
 
-  async deleteTodo(todoId: String, userId: String): Promise<void> {
+  async deleteNote(noteId: String, userId: String): Promise<void> {
     this.docClient.delete(
       {
-        TableName: this.todoTable,
+        TableName: this.noteTable,
         Key: {
-          todoId,
+          noteId,
           userId,
         },
       },
@@ -101,7 +101,7 @@ export class TodoAccess {
     );
   }
   async getPresignedImageUrl(
-    todoId: String,
+    noteId: String,
     imageId: String,
     userId: String
   ): Promise<string> {
@@ -113,9 +113,9 @@ export class TodoAccess {
 
     this.docClient.update(
       {
-        TableName: this.todoTable,
+        TableName: this.noteTable,
         Key: {
-          todoId,
+          noteId,
           userId,
         },
         UpdateExpression: "set attachmentUrl = :attachmentUrl",

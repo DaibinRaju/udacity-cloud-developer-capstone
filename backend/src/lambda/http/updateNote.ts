@@ -2,30 +2,30 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import * as middy from "middy";
 import { cors, httpErrorHandler } from "middy/middlewares";
 
-import { UpdateTodoRequest } from "../../requests/UpdateTodoRequest";
-import { updateTodo } from "../../businessLogic/todo";
+import { UpdateNoteRequest } from "../../requests/UpdateNoteRequest";
+import { updateNote } from "../../businessLogic/note";
 import { decodeJWTFromAPIGatewayEvent } from "../../auth/utils";
 import { parseUserId } from "../../auth/utils";
 import { createLogger } from "../../utils/logger";
-const logger = createLogger("todo");
+const logger = createLogger("note");
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     console.log("Processing event: ", event);
 
-    const todoId = event.pathParameters.todoId;
-    const updatedTodo: UpdateTodoRequest = JSON.parse(event.body);
+    const noteId = event.pathParameters.noteId;
+    const updatedNote: UpdateNoteRequest = JSON.parse(event.body);
 
     const jwtToken = decodeJWTFromAPIGatewayEvent(event);
     const userId = parseUserId(jwtToken);
 
-    // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
+    // TODO: Update a TODO item with the provided id using values in the "updatedNote" object
 
-    await updateTodo(todoId, updatedTodo, userId);
+    await updateNote(noteId, updatedNote, userId);
 
-    logger.info("todo UPDATED", {
+    logger.info("note UPDATED", {
       // Additional information stored with a log statement
-      key: todoId,
+      key: noteId,
       userId: userId,
       date: new Date().toISOString,
     });
